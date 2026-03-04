@@ -13,16 +13,22 @@ const TWILIO_FROM = process.env.TWILIO_FROM;
 const GOOGLE_MAPS_KEY = process.env.GOOGLE_MAPS_KEY;
 const HOME_ADDRESS = '2917 Hermosa View Drive, Hermosa Beach, CA 90254';
 
+// Health check
 app.get('/', (req, res) => {
   res.json({ status: 'Sports Calendar Server running ✅' });
 });
 
+// Send WhatsApp message
 app.post('/send-sms', async (req, res) => {
   const { to, body } = req.body;
   if (!to || !body) return res.status(400).json({ error: 'Missing to or body' });
   try {
     const client = twilio(TWILIO_SID, TWILIO_TOKEN);
-    const message = await client.messages.create({ body, from: TWILIO_FROM, to });
+    const message = await client.messages.create({
+      body,
+      from: `whatsapp:${TWILIO_FROM}`,
+      to: `whatsapp:${to}`
+    });
     res.json({ success: true, sid: message.sid });
   } catch (err) {
     console.error('Twilio error:', err.message);
@@ -30,6 +36,7 @@ app.post('/send-sms', async (req, res) => {
   }
 });
 
+// Get drive time
 app.get('/drive-time', async (req, res) => {
   const { destination } = req.query;
   if (!destination) return res.status(400).json({ error: 'Missing destination' });
